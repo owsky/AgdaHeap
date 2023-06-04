@@ -1,6 +1,6 @@
-open import Vector
-open import Nat
-open import Fin
+open import libs.Vector
+open import libs.Nat
+open import libs.Fin
 
 vec : Vector ℕ zero
 vec = []

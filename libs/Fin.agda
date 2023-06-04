@@ -1,6 +1,6 @@
-module Fin where
-  open import Nat
-  open import Bool
+module libs.Fin where
+  open import libs.Nat
+  open import libs.Bool
 
   data Fin : ℕ → Set where
     zer : {n : ℕ} → Fin (succ n)

@@ -1,8 +1,8 @@
-open import Nat
-open import Fin
-open import IfThenElse
-open import Bool
-module Vector where
+open import libs.Nat
+open import libs.Fin
+open import libs.IfThenElse
+open import libs.Bool
+module libs.Vector where
   
   data Vector (A : Set) : ℕ → Set where
     []  : Vector A zero

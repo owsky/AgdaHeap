@@ -1,5 +1,5 @@
-module Nat where
-  open import Bool
+module libs.Nat where
+  open import libs.Bool
 
   data ℕ : Set where
       zero  : ℕ

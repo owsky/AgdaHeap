@@ -1,6 +1,6 @@
-open import Sets
-open import Nat
-open import Vector
+open import libs.Sets
+open import libs.Nat
+open import libs.Vector
 
 module MinHeap
   (A : Set)
