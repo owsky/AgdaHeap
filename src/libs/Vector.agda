@@ -10,6 +10,10 @@ module libs.Vector where
 
   infixr 5 _∷_
 
+  snoc : {n : ℕ} {A : Set} → A → Vector A n → Vector A (succ n)
+  snoc x [] = x ∷ []
+  snoc x (y ∷ ys) = y ∷ (snoc x ys)
+
   _++_ : {n m : ℕ} {A : Set} → Vector A n → Vector A m → Vector A (n + m)
   [] ++ v2 = v2
   (x ∷ xs) ++ v2 = x ∷ (xs ++ v2)

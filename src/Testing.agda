@@ -1,12 +1,30 @@
-open import libs.Vector
-open import libs.Nat
-open import libs.Fin
+module Testing where
+  open import libs.Nat
+  open import libs.List
+  open import MinHeap ℕ _<?_ _≤?_
 
-vec : Vector ℕ zero
-vec = []
+  one : ℕ
+  one = succ zero
 
-vec2 : Vector ℕ (succ (succ (succ (succ zero))))
-vec2 = zero ∷ (succ zero) ∷ (succ (succ zero)) ∷ (succ (succ (succ zero))) ∷ []
+  two : ℕ
+  two = succ one
 
-vec2_sw : Vector ℕ (succ (succ (succ (succ zero))))
-vec2_sw = swap vec2 zer (suc (suc (suc zer)))
+  three : ℕ
+  three = succ two
+
+  four : ℕ
+  four = succ three
+
+  l : List ℕ
+  l = three ∷ zero ∷ four ∷ one ∷ two ∷ []
+  h : Heap
+  h = fromList l
+
+  h2 : Heap
+  h2 = new-heap
+
+  h3 : Heap
+  h3 = insert three h2
+
+  -- h2 : Heap
+  -- h2 = node three (node (succ three) empty empty) (node zero empty empty)

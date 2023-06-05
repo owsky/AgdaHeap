@@ -1,19 +1,30 @@
-open import libs.Sets
-open import libs.Nat
-open import libs.Vector
+open import libs.Bool
+open import libs.List
 
 module MinHeap
   (A : Set)
-  (_≤_ : A → A → Set)
-  (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x)) where
+  (_<?_ : A → A → Bool)
+  (_≤?_ : A → A → Bool)
+  where
 
-  data Min-Heap (A : Set) : Set where
-    []  : Min-Heap A
-    insert : A → Min-Heap A → Min-Heap A
-    delete : A → Min-Heap A → Min-Heap A
+  private
+    data Heap′ : Set where
+      empty : Heap′
+      node : A → Heap′ → Heap′ → Heap′
 
-  heapify : {n : ℕ} → Vector A n → Vector A n
-  heapify = {!   !}
+  record Heap : Set where
+    constructor heap
+    field value : Heap′
 
-  heap-insert : {n : ℕ} → A → Vector A n → Vector A (succ n)
-  heap-insert x xs = heapify (x ∷ xs)
+  new-heap : Heap
+  new-heap = heap empty
+
+  insert : A → Heap → Heap
+  insert x (heap empty) = heap (node x empty empty)
+  insert x (heap (node y l r)) with x ≤? y
+  ... | true = heap (node x (Heap.value (insert y (heap r))) l)
+  ... | false = heap (node y (Heap.value (insert x (heap r))) l)
+
+  fromList : List A → Heap
+  fromList [] = new-heap
+  fromList (x ∷ xs) = insert x (fromList xs)
