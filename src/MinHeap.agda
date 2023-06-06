@@ -6,6 +6,7 @@ module MinHeap
   (A : Set)
   (_<?_ : A → A → Bool)
   (_≤?_ : A → A → Bool)
+  (_≤_ : A → A → Set)
   where
 
   private
@@ -16,6 +17,10 @@ module MinHeap
     to-list' : Heap' → List A
     to-list' empty = []
     to-list' (node x left right) = x ∷ (to-list' left) ++ (to-list' right) 
+
+    peek-min' : Heap' → Maybe A
+    peek-min' empty = nothing
+    peek-min' (node x left right) = just x
 
   record Heap : Set where
     constructor heap
@@ -44,3 +49,22 @@ module MinHeap
   remove-min : Heap → Heap
   remove-min (heap empty) = heap empty
   remove-min (heap (node x left right)) = from-list (to-list' left ++ to-list' right) 
+
+  module Correctness where
+    data MaybeComp : A → Maybe A → Set where
+      none : (x : A) → MaybeComp x nothing
+      some : (x : A) → (y : A) → x ≤ y → MaybeComp x (just y)
+
+    data IsMin : A → Maybe A → Maybe A → Set where
+      is-min : (x : A) → (y z : Maybe A) → MaybeComp x y → MaybeComp x z → IsMin x y z
+
+    data IsHeap' : Heap' → Set where
+      empty-heap : IsHeap' empty
+      children-heap : (x : A) → (l r : Heap') → IsMin x (peek-min' l) (peek-min' r) → IsHeap' l → IsHeap' r → IsHeap' (node x l r)
+
+    data IsHeap : Heap → Set where
+      is-heap : (x : A) → (l r : Heap') → IsHeap' (node x l r) → IsHeap (heap (node x l r))
+
+    -- data IsHeap : Heap → Set where
+    --   empty-heap : IsHeap (heap empty)
+    --   children-heap : (x : A) → (l r : Heap') → IsMin x (peek-min' l) (peek-min' r) → {! IsHeap l  !} → {! IsHeap r  !} → IsHeap (heap (node x l r))
