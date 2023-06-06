@@ -1,7 +1,8 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module Testing where
   open import libs.Nat
   open import libs.List
-  open import MinHeap ℕ _<?_ _≤?_
+  open import MinHeap ℕ _<?_ _≤?_ _≤_
   open import libs.Maybe
 
   one : ℕ
@@ -32,6 +33,3 @@ module Testing where
 
   h3 : Heap
   h3 = insert three h2
-
-  -- h2 : Heap
-  -- h2 = node three (node (succ three) empty empty) (node zero empty empty)
