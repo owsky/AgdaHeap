@@ -2,15 +2,14 @@ open import libs.Bool
 open import libs.List
 open import libs.Maybe
 open import libs.Equality
+open import libs.Sets
 
 module MinHeap
   (A : Set)
-  (_<?_ : A → A → Bool)
-  (_≤?_ : A → A → Bool)
   (_≤_ : A → A → Set)
-  (≤-from-≤? : {a b : A} → (a ≤? b ≡ true) → a ≤ b)
   (trans≤ : {x y z : A} → x ≤ y → y ≤ z → x ≤ z)
-  -- (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x))
+  (refl≤ : {x : A} → x ≤ x)
+  (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x))
   where
 
   record Heap : Set
@@ -35,9 +34,9 @@ module MinHeap
 
   insert : A → Heap → Heap
   insert x (heap empty) = heap (node x empty empty)
-  insert x (heap (node y left right)) with x ≤? y
-  ... | true = heap (node x left ((Heap.value (insert y (heap right)))))
-  ... | false = heap (node y (Heap.value (insert x (heap left))) right)
+  insert x (heap (node y l r)) with cmp x y
+  ... | left  x≤y = heap (node x l ((Heap.value (insert y (heap r)))))
+  ... | right y≤x = heap (node y (Heap.value (insert x (heap l))) r)
 
   from-list : List A → Heap
   from-list [] = new-heap
@@ -57,8 +56,8 @@ module MinHeap
 
   module Correctness where
     data _≤-maybe_ : Maybe A → Maybe A → Set where
-      ≤-maybe-one : (x : A) → (just x) ≤-maybe nothing
-      ≤-maybe-both : (x : A) → (y : A) → x ≤ y → just x ≤-maybe (just y)
+      ≤-maybe-one : (x : A) → just x ≤-maybe nothing
+      ≤-maybe-both : (x : A) → (y : A) → x ≤ y → just x ≤-maybe just y
 
     trans≤-maybe : {x y z : Maybe A} → x ≤-maybe y → y ≤-maybe z → x ≤-maybe z
     trans≤-maybe (≤-maybe-one x) ()
@@ -66,46 +65,118 @@ module MinHeap
     trans≤-maybe (≤-maybe-both x y x≤y) (≤-maybe-both y z y≤z) = ≤-maybe-both x z (trans≤ x≤y y≤z)
 
     data IsHeap : Heap → Set where
-      is-heap-empty : IsHeap (heap empty) 
+      is-heap-empty : IsHeap new-heap
       is-heap-node : (x : A) → (l r : Heap') → IsHeap (heap l) → IsHeap (heap r) → just x ≤-maybe (peek-min (heap l)) → just x ≤-maybe (peek-min (heap r)) → IsHeap (heap (node x l r))
+
+    insert-lemma₀ : {x y : A} {h : Heap} → x ≤ y → just y ≤-maybe peek-min h → just x ≤-maybe peek-min h
+    insert-lemma₀ {x} {y} {h} x≤y y≤-maybe with peek-min h
+    ... | nothing = ≤-maybe-one x
+    insert-lemma₀ {x} {y} {h} x≤y (≤-maybe-both .y .z x₁) | just z = ≤-maybe-both x z (trans≤ x≤y x₁)
     
-    data IsMin : Maybe A → Heap → Set where
-      is-min-empty : IsMin nothing new-heap
-      is-min-nodel : (x y : A) → (l : Heap') → (r : Heap') → x ≤ y → IsMin (just x) (heap l) → IsMin (just x) (heap (node y l r))
-      is-min-noder : (x y : A) → (l : Heap') → (r : Heap') → x ≤ y → IsMin (just x) (heap r) → IsMin (just x) (heap (node y l r))
+    -- insert-result-lemma : (x : A) → (h : Heap) → IsHeap h → (peek-min (insert x h) ≡ just x) ⊎ (peek-min (insert x h) ≡ peek-min h)
+    -- insert-result-lemma x h h-is-heap with peek-min h
+    -- ... | nothing = {!   !}
+    -- ... | just root with cmp x root
+    -- ... | comp with peek-min (insert x h)
+    -- insert-result-lemma x h h-is-heap | just root | left x₁ | nothing = {!   !}
+    -- insert-result-lemma x h h-is-heap | just root | left x₁ | just x₂ = {!   !}
+    -- insert-result-lemma x h h-is-heap | just root | right x₁ | nothing = {!   !}
+    -- insert-result-lemma x h h-is-heap | just root | right x₁ | just x₂ = {!   !}
 
-    new-heap-proof : IsHeap new-heap
-    new-heap-proof = is-heap-empty
+    insert-lemma₁ : {y : A} {h : Heap} → just y ≤-maybe peek-min h → just y ≤-maybe peek-min (insert y h)
+    insert-lemma₁ {y} {h} y-≤-maybe with peek-min h
+    ... | nothing = {!   !}
+    ... | just root with cmp y root
+    ... | comp with insert y h
+    ... | ins with peek-min ins
+    insert-lemma₁ {y} {h} y-≤-maybe | just root | left y≤root | heap value | nothing = ≤-maybe-one y
+    insert-lemma₁ {y} {h} y-≤-maybe | just root | left y≤root | heap empty | just pm-ins = {!   !}
+    insert-lemma₁ {y} {h} y-≤-maybe | just root | left y≤root | heap (node x value value₁) | just pm-ins = {!   !}
+    insert-lemma₁ {y} {h} y-≤-maybe | just root | right root≤y | heap value | nothing = {!   !}
+    insert-lemma₁ {y} {h} y-≤-maybe | just root | right root≤y | heap value | just pm-ins = {!   !}
+    -- ... | left y≤root = insert-lemma₀ y≤root {!  y-≤-maybe !}
+    -- ... | right root≤y = insert-lemma₀ (refl≤ {y}) {!   !}
 
-    insert-proof-lemma∅ : {x root : A} → x ≤? root ≡ true → just x ≤-maybe just root
-    insert-proof-lemma∅ {x} {root} p = ≤-maybe-both x root (≤-from-≤? p)
-
-    insert-proof-lemma₁ : {x root : A} {left : Heap'} → just root ≤-maybe peek-min (heap left) → x ≤? root ≡ true → just x ≤-maybe peek-min (heap left)
-    insert-proof-lemma₁ p1 p2 = trans≤-maybe (insert-proof-lemma∅ p2) p1
-
-    insert-proof-lemma₂ : {root : A} {right : Heap} → just root ≤-maybe peek-min right → just root ≤-maybe peek-min (insert root right)
-    insert-proof-lemma₂ {root} {right} p with peek-min (insert root right) in eq
-    ... | nothing = ≤-maybe-one root
-    ... | just x = ≤-maybe-both root x {!   !}
-
-    insert-proof-lemma₃ : {x y : A} → (x ≤? y) ≡ true → just x ≤-maybe just y
-    insert-proof-lemma₃ {x} {y} p = ≤-maybe-both x y (≤-from-≤? p)
-
-    insert-proof-lemma₄ : {x y : A} {left : Heap} → just y ≤-maybe peek-min left → just y ≤-maybe peek-min (insert x left)
-    insert-proof-lemma₄ {x} {y} {left} p = {!   !}
+    insert-lemma₂ : {x y : A} {h : Heap} → y ≤ x → just y ≤-maybe peek-min h → just y ≤-maybe peek-min (insert x h)
+    insert-lemma₂ {x} {y} {h} y≤x just-y-≤-maybe-peek-min-h = {!   !}
 
     insert-proof : (x : A) → (h : Heap) → IsHeap h → IsHeap (insert x h)
-    insert-proof x (heap empty) h-is-heap = is-heap-node x empty empty h-is-heap h-is-heap (≤-maybe-one x) (≤-maybe-one x)
-    insert-proof x (heap (node y left right)) (is-heap-node .y .left .right h-is-heap h-is-heap₁ x₁ x₂) with x ≤? y in eq
-    ... | true = is-heap-node x left (Heap.value (insert y (heap right))) h-is-heap (insert-proof y (heap right) h-is-heap₁) (insert-proof-lemma₁ x₁ eq) (trans≤-maybe (insert-proof-lemma₃ eq) (insert-proof-lemma₂ x₂)) -- (insert-proof-lemma₂ pz eq)
-    ... | false = is-heap-node y (Heap.value (insert x (heap left))) right (insert-proof x (heap left) h-is-heap) h-is-heap₁ (insert-proof-lemma₄ x₁) x₂
+    insert-proof x (heap empty) is-heap-empty = is-heap-node x empty empty is-heap-empty is-heap-empty (≤-maybe-one x) (≤-maybe-one x)
+    insert-proof x (heap (node y l r)) (is-heap-node y l r l-is-heap r-is-heap y≤min-l y≤min-r) with cmp x y
+    ... | left x≤y = is-heap-node x l (Heap.value ( insert y (heap r))) l-is-heap (insert-proof y (heap r) r-is-heap) (insert-lemma₀ x≤y y≤min-l) (insert-lemma₀ x≤y (insert-lemma₁ y≤min-r))
+    ... | right y≤x = is-heap-node y (Heap.value (insert x (heap l))) r (insert-proof x (heap l) l-is-heap) r-is-heap (insert-lemma₂ y≤x y≤min-l) y≤min-r
+    
 
-    from-list-proof : (xs : List A) → IsHeap (from-list xs)
-    from-list-proof [] = {!   !}
-    from-list-proof (x ∷ xs) = {!   !}
 
-    peek-min-proof : {x : A} → (h : Heap) → IsHeap h → IsMin (peek-min h) h
-    peek-min-proof = {!   !}
 
-    remove-min-proof : (h : Heap) → IsHeap h → IsHeap  (remove-min h)
-    remove-min-proof = {!   !}   
+
+
+-- EXPERIMENT
+
+    -- insert-proof : (x : A) → (h : Heap) → IsHeap h → IsHeap (fst (insert x h))
+    -- insert-proof x (heap empty) h-is-heap = is-heap-node x empty empty h-is-heap h-is-heap (≤-maybe-one x) (≤-maybe-one x)
+    -- insert-proof x (heap (node root l r)) h-is-heap with cmp x root | insert x (heap (node root l r))
+    -- ... | left x≤root | heap empty , x = is-heap-empty
+    -- ... | left x≤root | heap (node x₁ value value₁) , x = {!   !}
+    -- ... | right root≤x | nh , root = {!   !}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -- data IsMin : A → Heap → Set where
+    --   is-min-empty : (x : A) → IsMin x new-heap
+    --   is-min-node : (x y : A) → (l : Heap') → (r : Heap') → x ≤ y → IsMin x (heap l) → IsMin x (heap (node y l r))
+
+    -- insert-lemma₃ : {x y : A} {h : Heap} → x ≤ y → IsMin y h → IsMin x h
+    -- insert-lemma₃ {x} {y} {.new-heap} x≤y (is-min-empty .y) = is-min-empty x
+    -- insert-lemma₃ {x} {y} {.(heap (node y₁ l r))} x≤y (is-min-node .y y₁ l r x₁ is-min-y-h) =
+    --   let insert-lemma₃-helper : {h' : Heap} → IsMin y h' → IsMin x h'
+    --       insert-lemma₃-helper is-min-y-h' = insert-lemma₃ x≤y is-min-y-h'
+    --   in is-min-node x y₁ l r (trans≤ x≤y x₁) (insert-lemma₃-helper is-min-y-h)
+    
+    -- is-min-trans : {x y : A} {h : Heap} → x ≤ y → IsMin y h → IsMin x h
+    -- is-min-trans {x} {y} {heap empty} x≤y is-min-y-h = is-min-empty x
+    -- is-min-trans {x} {y} {heap (node x₁ value value₁)} x≤y (is-min-node .y .x₁ .value .value₁ x₂ is-min-y-h) = is-min-node x x₁ value value₁ (trans≤ x≤y x₂) (insert-lemma₃ x≤y is-min-y-h)
+
+    -- data IsHeap : Heap → Set where
+    --   is-heap-empty : IsHeap (heap empty)
+    --   is-heap-node : (x : A) → (l r : Heap') → IsHeap (heap l) → IsHeap (heap r) → IsMin x (heap l) → IsMin x (heap r) → IsHeap (heap (node x l r))
+
+    -- is-min-insert-refl : {x : A} {h : Heap} → IsMin x h → x ≤ x → IsMin x (insert x h)
+    -- is-min-insert-refl {x} {heap empty} is-min-x-h x≤x = is-min-node x x empty empty x≤x is-min-x-h
+    -- is-min-insert-refl {x} {heap (node root l r)} (is-min-node .x .root .l .r x₁ is-min-x-h) x≤x with insert x (heap (node root l r))
+    -- ... | heap empty = is-min-empty x
+    -- ... | heap (node x₂ value value₁) = is-min-node x x₂ value value₁ {!   !} {!   !}
+
+    -- insert-lemma₁ : {x y : A} {h : Heap} → x ≤ y → IsMin y h → IsMin x (insert y h)
+    -- insert-lemma₁ x≤y is-min-y-h = {!   !}
+
+    -- insert-lemma₂ : {x y : A} {h : Heap} → y ≤ x → IsMin y h → IsMin y (insert x h)
+    -- insert-lemma₂ {x} {y} {h} y≤x is-min-y-h with insert x h
+    -- ... | heap empty = is-min-empty y
+    -- ... | heap (node root l r) with cmp x root
+    -- ... | left x≤root = is-min-node y root l r (trans≤ y≤x x≤root) {!   !}
+    -- ... | right root≤x = is-min-node y root l r {!   !} {!   !}
+
+    -- insert-preserves-min-heap : (x : A) → (h : Heap) → IsHeap h → IsHeap (insert x h)
+    -- insert-preserves-min-heap x (heap empty) is-heap-empty = is-heap-node x empty empty is-heap-empty is-heap-empty (is-min-empty x) (is-min-empty x)
+    -- insert-preserves-min-heap x (heap (node y l r)) (is-heap-node y l r is-heap-l is-heap-r is-min-l is-min-r) with cmp x y
+    -- ... | left x≤y = is-heap-node x l (Heap.value (insert y (heap r))) is-heap-l (insert-preserves-min-heap y (heap r) is-heap-r) (is-min-trans x≤y is-min-l) (insert-lemma₁ x≤y is-min-r)
+    -- ... | right y≤x = is-heap-node y (Heap.value (insert x (heap l))) r (insert-preserves-min-heap x (heap l) is-heap-l) is-heap-r (insert-lemma₂ y≤x is-min-l) is-min-r

@@ -1,6 +1,7 @@
 module libs.Nat where
   open import libs.Bool
   open import libs.Equality
+  open import libs.Sets
 
   data ℕ : Set where
       zero  : ℕ
@@ -10,6 +11,22 @@ module libs.Nat where
     base  : {n : ℕ}     → n < succ n
     step  : {a b : ℕ}   → a < b → a < succ b
 
+  data _≤_ : ℕ → ℕ → Set where
+    base-≤ : (n : ℕ) -> n ≤ n
+    step-≤ : (n m : ℕ) -> n ≤ m -> n ≤ succ m
+
+  _<?_ : ℕ → ℕ → Bool
+  zero     <? zero     = false
+  zero     <? (succ b) = true
+  (succ a) <? zero     = false
+  (succ a) <? (succ b) = a <? b
+
+  _≤?_ : ℕ → ℕ → Bool
+  zero     ≤? zero     = true
+  zero     ≤? (succ b) = true
+  (succ a) ≤? zero     = false
+  (succ a) ≤? (succ b) = a ≤? b
+  
   lemma-<-zero : {n : ℕ} → zero < succ n
   lemma-<-zero {zero} = base
   lemma-<-zero {succ n} = step lemma-<-zero
@@ -49,21 +66,7 @@ module libs.Nat where
   half (succ zero)     = zero
   half (succ (succ n)) = succ (half n)
 
-  data _≤_ : ℕ → ℕ → Set where
-    base-≤ : (n : ℕ) -> n ≤ n
-    step-≤ : (n m : ℕ) -> n ≤ m -> n ≤ succ m
 
-  _<?_ : ℕ → ℕ → Bool
-  zero     <? zero     = false
-  zero     <? (succ b) = true
-  (succ a) <? zero     = false
-  (succ a) <? (succ b) = a <? b
-
-  _≤?_ : ℕ → ℕ → Bool
-  zero     ≤? zero     = true
-  zero     ≤? (succ b) = true
-  (succ a) ≤? zero     = false
-  (succ a) ≤? (succ b) = a ≤? b
 
   lemma-succ-zero : (n : ℕ) → succ n ≡ n + succ zero
   lemma-succ-zero zero = refl
