@@ -1,7 +1,11 @@
 open import libs.List
-open import libs.Maybe
+-- open import libs.Maybe
+open import Data.Maybe
 open import libs.Sets
 open import libs.Equality
+open import libs.Bool
+open import libs.Nat
+open import libs.Exp
 
 module Heap
   (A : Set)
@@ -9,6 +13,9 @@ module Heap
   (trans≤ : {x y z : A} → x ≤ y → y ≤ z → x ≤ z)
   (refl≤ : {x : A} → x ≤ x)
   (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x))
+  (_≟_ : (x y : A) → Bool)
+  (zero : A)
+  (zero≤ : {x : A} → zero ≤ x)
   where
 
   data Heap : Set where
@@ -84,5 +91,47 @@ module Heap
     from-list-proof [] = is-heap-empty
     from-list-proof (x ∷ xs) = insert-proof x (from-list xs) (from-list-proof xs)
 
-    peek-min-proof : (h : Heap) → IsHeap h →  {!   !}
-    peek-min-proof = {!   !}
+    convert-maybe : A → Maybe A → A
+    convert-maybe x nothing = x
+    convert-maybe _ (just y) = y
+
+    data IsMin : A → Heap → Set where
+      is-min-empty : (x : A) → IsMin x empty
+      is-min-node : (x y : A) → (l : Heap) → (r : Heap) → x ≤ y → IsMin x l → IsMin x r → IsMin x (node y l r)
+
+    both-ineq : {x y : A} → x ≤ y → y ≤ x → x ≡ y
+    both-ineq {x} {y} x≤y y≤x = {!   !}
+
+    -- ins-lemma : (x root : A) → (l r : Heap) → (peek-min (insert x (node root l r)) ≡ just x) ⊎ (peek-min (insert x (node root l r)) ≡ just root)
+    -- ins-lemma x root l r = {!   !}
+
+    ins-min-lemma : (x root : A) → (l r : Heap) → x ≤ root → peek-min (insert x (node root l r)) ≡ just x
+    ins-min-lemma x root l r x≤root with cmp x root
+    ... | left x≤root = refl
+    ... | right root≤x = symm (cong just (both-ineq x≤root root≤x))
+
+    peek-min-proof : {x root : A} → (l r : Heap) → x ≤ root → peek-min (insert x (node root l r)) ≡ just x
+    peek-min-proof {x} {root} l r x≤root with ins-min-lemma x root l r
+    ... | ins = ins x≤root
+
+    -- _∈?_ : A → List A → Bool
+    -- x ∈? [] = false
+    -- x ∈? (y ∷ ys) with x ≟ y
+    -- ... | true = true
+    -- ... | false = x ∈? ys
+
+    -- data SameItems : Heap → List A → Set where
+    --   same-items : (h : Heap) → (xs : List A) → IsHeap h → to-list h ≡ xs → SameItems h xs
+
+    -- same-items-proof : (h : Heap) → IsHeap h → (xs : List A) → SameItems h xs
+    -- same-items-proof h h-is-heap xs = same-items h xs h-is-heap {!  proof !}
+    --   where
+    --     proof : (x : A) → x ∈? to-list h ≡ true → x ∈? xs ≡ true → to-list h ≡ xs
+    --     proof x = {!   !}
+
+    -- to-list-proof : (h : Heap) → IsHeap h → {!   !}
+    -- to-list-proof = {!   !}
+
+    -- remove-min-proof : (h : Heap) → IsHeap h → {!   !}
+    -- remove-min-proof = {!   !}
+

@@ -66,8 +66,10 @@ module libs.Nat where
   half (succ zero)     = zero
   half (succ (succ n)) = succ (half n)
 
+  lemma-+-zero : (a : ℕ) → (a + zero) ≡ a
+  lemma-+-zero zero     = refl
+  lemma-+-zero (succ a) = cong succ (lemma-+-zero a)
 
-
-  lemma-succ-zero : (n : ℕ) → succ n ≡ n + succ zero
-  lemma-succ-zero zero = refl
-  lemma-succ-zero (succ n) = cong succ (lemma-succ-zero n) 
+  lemma-+-succ : (a b : ℕ) → (a + succ b) ≡ succ (a + b)
+  lemma-+-succ zero     b = refl
+  lemma-+-succ (succ a) b = cong succ (lemma-+-succ a b)
