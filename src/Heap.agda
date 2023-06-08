@@ -107,10 +107,24 @@ module Heap
     remove-min-proof (node root l r) (is-heap-node .root .l .r is-heap is-heap₁ x x₁) with (to-list l ++ to-list r)
     ... | tl = from-list-proof tl
 
+    to-list-proof-lemma : {root : A} {l r : Heap} → insert root (from-list (to-list l ++ to-list r)) ≡ (node root l r)
+    to-list-proof-lemma {root} {l} {r} with from-list (to-list l ++ to-list r)
+    ... | empty = {!   !}
+    ... | node x fl fl₁ = {!   !}
+
     to-list-proof : (h : Heap) → IsHeap h → from-list (to-list h) ≡ h
     to-list-proof empty is-heap = refl
     to-list-proof (node root l r) (is-heap-node .root .l .r is-heap is-heap₁ x x₁) = begin
-      from-list (to-list (node root l r))                ≡⟨⟩
-      from-list (root ∷ to-list l ++ to-list r)          ≡⟨ {!   !} ⟩
-      insert root (from-list (root ∷ to-list l ++ to-list r)) ≡⟨ {!   !} ⟩
-      (node root l r)                                    ∎
+      from-list (to-list (node root l r))                          ≡⟨⟩
+      from-list (root ∷ to-list l ++ to-list r)                    ≡⟨⟩
+      insert root (from-list (to-list l ++ to-list r))             ≡⟨ to-list-proof-lemma ⟩
+      (node root l r)                                              ∎
+
+    _∈_ : A → List → Set
+    x ∈ [] = ⊥
+    x ∈ (y ∷ xs) = (x ≡ y) ⊎ (x ∈ xs)
+
+    -- to-list-proof2 : (h : Heap) → IsHeap h → to-list h
+    data SameElements : Heap → List → Set where
+      same-empty : SameElements empty []
+      same-elements : (xs : List) → (root : A) → (l r : Heap) → (root ∈ xs) → SameElements (node root l r) xs
