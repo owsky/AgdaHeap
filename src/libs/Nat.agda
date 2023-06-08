@@ -7,6 +7,8 @@ module libs.Nat where
       zero  : ℕ
       succ  : ℕ → ℕ
 
+  {-# BUILTIN NATURAL ℕ #-}
+
   data _<_ : ℕ → ℕ → Set where
     base  : {n : ℕ}     → n < succ n
     step  : {a b : ℕ}   → a < b → a < succ b

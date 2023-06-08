@@ -1,5 +1,4 @@
--- open import libs.Maybe
-open import Data.Maybe
+open import libs.Maybe
 open import libs.Sets
 open import libs.Equality
 open import libs.Bool
@@ -9,9 +8,10 @@ open import libs.Exp
 module Heap
   (A : Set)
   (_≤_ : A → A → Set)
+  (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x))
   (trans≤ : {x y z : A} → x ≤ y → y ≤ z → x ≤ z)
   (refl≤ : {x : A} → x ≤ x)
-  (cmp : (x y : A) → (x ≤ y) ⊎ (y ≤ x))
+  (antisym≤ : {x y : A} → x ≤ y → y ≤ x → x ≡ y)
   where
   open import libs.List A
 
@@ -40,7 +40,7 @@ module Heap
   -- awful implementation
   remove-min : Heap → Heap
   remove-min empty = empty
-  remove-min (node x l r) = from-list (to-list l ++ to-list r) 
+  remove-min (node x l r) = from-list (to-list l ++ to-list r)
 
   module Correctness where
     data _≤-maybe_ : Maybe A → Maybe A → Set where
@@ -93,13 +93,10 @@ module Heap
       is-min-empty : (x : A) → IsMin x empty
       is-min-node : (x y : A) → (l : Heap) → (r : Heap) → x ≤ y → IsMin x l → IsMin x r → IsMin x (node y l r)
 
-    both-ineq : {x y : A} → x ≤ y → y ≤ x → x ≡ y
-    both-ineq {x} {y} x≤y y≤x = {!   !}
-
     ins-min-lemma : (x root : A) → (l r : Heap) → x ≤ root → peek-min (insert x (node root l r)) ≡ just x
     ins-min-lemma x root l r x≤root with cmp x root
     ... | left x≤root = refl
-    ... | right root≤x = symm (cong just (both-ineq x≤root root≤x))
+    ... | right root≤x = symm (cong just (antisym≤ x≤root root≤x))
 
     peek-min-proof : {x root : A} → (l r : Heap) → x ≤ root → peek-min (insert x (node root l r)) ≡ just x
     peek-min-proof {x} {root} l r x≤root with ins-min-lemma x root l r
@@ -111,4 +108,9 @@ module Heap
     ... | tl = from-list-proof tl
 
     to-list-proof : (h : Heap) → IsHeap h → from-list (to-list h) ≡ h
-    to-list-proof h is-heap = {!   !}
+    to-list-proof empty is-heap = refl
+    to-list-proof (node root l r) (is-heap-node .root .l .r is-heap is-heap₁ x x₁) = begin
+      from-list (to-list (node root l r))                ≡⟨⟩
+      from-list (root ∷ to-list l ++ to-list r)          ≡⟨ {!   !} ⟩
+      insert root (from-list (root ∷ to-list l ++ to-list r)) ≡⟨ {!   !} ⟩
+      (node root l r)                                    ∎

@@ -1,12 +1,12 @@
-open import Agda.Primitive
+-- open import Agda.Primitive using (Level)
 
 module libs.Equality where
-  data _≡_ {n : Level} {A : Set n} (x : A) : A → Set n where
+  data _≡_ {A : Set} (x : A) : A → Set where
     refl : x ≡ x
 
   infixl 5 _≡_
-
-  -- {-# BUILTIN EQUALITY _≡_ #-} 
+  
+  {-# BUILTIN EQUALITY _≡_ #-} 
 
   cong : {A B : Set} {x y : A} → (f : A → B) → x ≡ y → f x ≡ f y
   cong f refl = refl
