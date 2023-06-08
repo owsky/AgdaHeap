@@ -40,6 +40,7 @@ module Heap
   to-list empty = []
   to-list (node x l r) = x ∷ (to-list l) ++ (to-list r)
 
+  -- awful implementation, will probably change it to O(log n) later
   remove-min : Heap → Heap
   remove-min empty = empty
   remove-min (node x l r) = from-list (to-list l ++ to-list r) 
@@ -114,6 +115,11 @@ module Heap
     peek-min-proof {x} {root} l r x≤root with ins-min-lemma x root l r
     ... | ins = ins x≤root
 
+    remove-min-proof : (h : Heap) → IsHeap h → IsHeap (remove-min h)
+    remove-min-proof empty is-heap = is-heap
+    remove-min-proof (node root l r) (is-heap-node .root .l .r is-heap is-heap₁ x x₁) with (to-list l ++ to-list r)
+    ... | tl = from-list-proof tl
+
     -- _∈?_ : A → List A → Bool
     -- x ∈? [] = false
     -- x ∈? (y ∷ ys) with x ≟ y
@@ -129,9 +135,7 @@ module Heap
     --     proof : (x : A) → x ∈? to-list h ≡ true → x ∈? xs ≡ true → to-list h ≡ xs
     --     proof x = {!   !}
 
-    -- to-list-proof : (h : Heap) → IsHeap h → {!   !}
-    -- to-list-proof = {!   !}
+    to-list-proof : (h : Heap) → IsHeap h → {!   !}
+    to-list-proof = {!   !}
 
-    -- remove-min-proof : (h : Heap) → IsHeap h → {!   !}
-    -- remove-min-proof = {!   !}
 
