@@ -27,6 +27,9 @@ module Heap
     pattern
     field value : Heap'
 
+  new-heap : Heap
+  new-heap = heap empty
+
   insert : A → Heap → Heap
   insert x (heap empty) = heap empty
   insert x (heap (node root l r)) with cmp x root
@@ -69,6 +72,9 @@ module Heap
     data IsHeap : Heap' → Set where
       is-heap-empty : IsHeap empty
       is-heap-node  : (x : A) → (l r : Heap') → IsHeap l → IsHeap r → just x ≤-maybe (peek-first (heap l)) → just x ≤-maybe (peek-first (heap r)) → IsHeap (node x l r)
+
+    new-heap-proof : IsHeap (Heap.value new-heap)
+    new-heap-proof = is-heap-empty
 
     insert-lemma₀ : {x y : A} {h : Heap} → x ≤ y → just y ≤-maybe peek-first h → just x ≤-maybe peek-first h
     insert-lemma₀ {h = h} x≤y y≤-maybe with peek-first h
